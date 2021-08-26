@@ -8,52 +8,26 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   useColorScheme,
   View,
 } from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
 
-const Section: React.FC<{
-  title: string;
-}> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+const COUNTER_VALUES = [0, 1, 2, 3, 4, 5, 6];
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -61,6 +35,28 @@ const App = () => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  const [counter, setCounter] = useState<number>(0);
+
+  const counterTransition = useSharedValue(0);
+
+  const counterStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(counterTransition.value, COUNTER_VALUES, [
+      '#00000000', // #1 can't use 'transparent', 'rgba(0,0,0,0)' or '#00000000'  - it has been working in v2.2.0
+      '#E21414',
+      '#E21414',
+      '#FBBA00',
+      '#FBBA00',
+      '#1ED25A',
+      '#1ED25A',
+    ]),
+  }));
+
+  useEffect(() => {
+    counterTransition.value = withTiming(counter, {
+      duration: 500,
+    });
+  }, [counter]);
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -73,20 +69,17 @@ const App = () => {
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <Animated.Text style={[styles.sectionTitle, counterStyle]}>
+            TEST
+          </Animated.Text>
+          <Button
+            title={`Increment: ${counter}`}
+            onPress={() =>
+              setCounter(count =>
+                count === COUNTER_VALUES.length - 1 ? 0 : count + 1,
+              )
+            }
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -94,21 +87,9 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
   },
 });
 
